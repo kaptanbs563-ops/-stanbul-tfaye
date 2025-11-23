@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İstanbul İtfaiye | Operasyon Merkezi</title>
+    <style>
+        /*
+        ========================================
+        GENEL CSS (DARK MODE)
+        ========================================
+        */
+        :root {
+            --main-red: #d90429;
+            --fire-red: #cc0000;
+            --dark-bg: #1c1c1c;
+            --light-text: #f0f0f0;
+            --accent-yellow: #ffc300;
+            --status-active: #008000;
+            --status-break: #ffc400;
+            --status-inactive: #555555;
+            --success-green: #2ecc71; 
+            --fail-red: #e74c3c; 
+            --box-bg: rgba(0, 0, 0, 0.85);
+            --form-bg: #333; /* Form içi arka plan */
+            --input-bg: #444; /* Input arka planı */
+            --input-border: #555;
+            --alert-red: #8b0000; /* Ceza uyarısı için koyu kırmızı */
+            --alert-bg: #4f1d1d; /* Ceza uyarısı için koyu arka plan */
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--dark-bg);
+            color: var(--light-text);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+            overflow: hidden; 
+        }
+
+        /* Arkaplan Efekti */
+        .fire-effect {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2;
+            background: linear-gradient(180deg, rgba(28, 28, 28, 0.9) 0%, rgba(28, 28, 28, 0.8) 70%, rgba(217, 4, 41, 0.1) 100%);
+            animation: pulse-red 5s infinite alternate;
+        }
+        @keyframes pulse-red {
+            0% { box-shadow: inset 0 0 50px rgba(217, 4, 41, 0.3); }
+            100% { box-shadow: inset 0 0 80px rgba(217, 4, 41, 0.6); }
+        }
+
+        /* GİRİŞ KUTUSU STİLLERİ */
+        #login-container {
+            background-color: var(--box-bg);
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 0 25px rgba(217, 4, 41, 0.8);
+            border-top: 5px solid var(--main-red);
+            width: 350px;
+            max-width: 90%;
+            z-index: 10;
+        }
+
+        #login-container h2 { color: var(--main-red); text-transform: uppercase; margin-bottom: 25px; }
+        .input-group { margin-bottom: 20px; text-align: left; }
+        .input-group label { display: block; margin-bottom: 5px; font-weight: bold; color: var(--light-text); }
+        .input-group input, .input-group select {
+            width: 100%; padding: 10px; border: 1px solid #444; border-radius: 5px; 
+            background-color: #333; color: var(--light-text); box-sizing: border-box;
+        }
+        .login-button {
+            background-color: var(--main-red); color: var(--light-text); padding: 12px 20px; 
+            border: none; border-radius: 5px; font-size: 1.1em; text-transform: uppercase; 
+            font-weight: bold; cursor: pointer; transition: background-color 0.3s ease; width: 100%;
+        }
+        .login-button:hover { background-color: #ff1a3d; }
+        
+        #error-message { color: var(--accent-yellow); margin-top: 15px; font-weight: bold; display: none; }
+
+        /* ANA İÇERİK ve NAVİGASYON STİLLERİ */
+        .full-content-wrapper { 
+            display: none; 
+            width: 100%; 
+            align-items: center; 
+            flex-direction: column; 
+            justify-content: center; 
+        }
+        .header { padding: 20px; width: 90%; max-width: 1200px; margin-bottom: 30px; z-index: 1; }
+        .logo-text { font-size: 3em; font-weight: bold; color: var(--main-red); text-transform: uppercase; letter-spacing: 5px; text-shadow: 0 0 10px rgba(217, 4, 41, 0.5); margin: 0; }
+        
+        /* Ana Kutu (Menü/İçerik) */
+        .main-container { 
+            background-color: var(--box-bg); 
+            padding: 40px 60px; 
+            border-radius: 10px; 
+            box-shadow: 0 0 20px rgba(217, 4, 41, 0.5); 
+            border-top: 5px solid var(--main-red); 
+            max-width: 80%; 
+            width: 500px; 
+            z-index: 1; 
+        }
+        
+        /* Ana Menü */
+        #main-menu {
+            display: block; /* Başlangıçta görünür olmalı (Diğer alt içerikler gizli kalmalı) */
+        }
+        #rp-clock { font-size: 3.5em; font-weight: bolder; color: var(--accent-yellow); }
+        .nav-buttons { display: flex; flex-direction: column; gap: 15px; margin-top: 30px; }
+        .nav-button { background-color: var(--main-red); color: var(--light-text); padding: 12px 25px; border: none; border-radius: 5px; font-size: 1.1em; text-transform: uppercase; font-weight: bold; cursor: pointer; transition: background-color 0.3s ease; text-decoration: none; display: block; }
+        .nav-button:hover { background-color: #ff1a3d; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(217, 4, 41, 0.7); }
+        .footer { margin-top: 40px; font-size: 0.9em; color: #888; z-index: 1; }
+        
+        .back-button {
+            background-color: #555;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+        .back-button:hover { background-color: #777; }
+
+        /* PROFİL KART STİLLERİ */
+        .profile-toggle { position: fixed; top: 20px; right: 20px; width: 60px; height: 60px; border-radius: 50%; background-color: var(--main-red); border: 3px solid var(--light-text); cursor: pointer; z-index: 100; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; box-shadow: 0 0 10px rgba(217, 4, 41, 0.7); }
+        .profile-toggle:hover { background-color: #ff1a3d; transform: scale(1.05); }
+        .profile-toggle-icon { color: var(--light-text); font-size: 2em; font-weight: bold; }
+        .profile-card { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; background-color: #ffffff; border: 3px solid var(--fire-red); border-radius: 10px; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.9); padding: 30px; width: 350px; text-align: center; color: #333; display: none; opacity: 0; transition: opacity 0.3s ease; }
+        .profile-card.visible { display: block; opacity: 1; }
+        #profile-image { width: 100px; height: 100px; border-radius: 50%; border: 4px solid var(--fire-red); object-fit: cover; }
+        #person-name { text-transform: uppercase; font-size: 2em; }
+        #person-rank { color: var(--fire-red); font-size: 1.3em; }
+        hr { background-color: var(--fire-red); }
+        .info-line { display: flex; justify-content: space-between; align-items: center; padding-left: 20px; line-height: 1.8; }
+        .info-label { font-weight: bold; color: #333; }
+        .status-wrapper { padding-top: 10px; border-top: 1px dashed #ccc; }
+        #status-display { padding: 5px 10px; border-radius: 5px; display: inline-block; cursor: pointer; }
+        .status-Görevde { background-color: var(--status-active); color: var(--light-text); }
+        .status-Molada { background-color: var(--status-break); color: var(--fire-dark); }
+        .status-İnaktif { background-color: var(--status-inactive); color: var(--light-text); }
+        #status-menu { position: absolute; left: 50%; transform: translateX(-50%); top: 400px; background-color: #333; border: 1px solid var(--fire-red); border-radius: 5px; z-index: 1001; width: 80%; max-width: 250px; text-align: center; list-style: none; padding: 5px 0; margin: 0; display: none; }
+        #status-menu.visible { display: block; }
+        .status-option { color: var(--light-text); border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+        .status-option:hover { background-color: var(--fire-red); }
+
+
+        /*
+        ========================================
+        TUTANAK İÇERİK STİLLERİ (MESAİ, OLAY, CEZA)
+        ========================================
+        */
+        #mesai-content, #olay-tutanak-content, #ceza-tutanak-content {
+            display: none; /* ÖNEMLİ: Başlangıçta gizli olmalı */
+            background-color: var(--form-bg); 
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-height: 70vh; 
+            overflow-y: auto; 
+            color: var(--light-text);
+        }
+
+        #mesai-content h2, #olay-tutanak-content h2, #ceza-tutanak-content h2 {
+            color: var(--main-red);
+            margin-bottom: 25px;
+            font-size: 1.8em;
+            border-bottom: 2px solid var(--fire-red);
+            padding-bottom: 10px;
+        }
+        
+        /* FORM GRUPLARI (Tutanaklar için ortak stil) */
+        .form-group { text-align: left; margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: var(--accent-yellow); }
+        .form-group input, 
+        .form-group select, 
+        .form-group textarea {
+            width: 100%; padding: 10px; border: 1px solid var(--input-border); border-radius: 5px; 
+            background-color: var(--input-bg); color: var(--light-text); box-sizing: border-box; resize: vertical;
+        }
+        .form-group textarea { min-height: 100px; }
+        
+        /* Çıktı Alanları */
+        #olay-tutanak-output, #ceza-tutanak-output {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #222;
+            border: 1px solid var(--fire-red);
+            border-radius: 8px;
+            text-align: left;
+            font-size: 0.9em;
+            display: none;
+            word-wrap: break-word;
+        }
+        #olay-tutanak-output h3, #ceza-tutanak-output h3 { color: var(--main-red); margin-top: 0; border-bottom: 1px solid var(--fire-red); padding-bottom: 5px; }
+        #olay-tutanak-output p, #ceza-tutanak-output p { margin: 5px 0; }
+        #olay-tutanak-output strong, #ceza-tutanak-output strong { color: var(--accent-yellow); }
+
+
+        /* CEZA TUTANAK ÖZEL STİLLER */
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            background-color: var(--alert-bg); 
+            color: var(--light-text); 
+            border: 1px solid var(--alert-red);
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        /* Yetkili Alanı Çizgisi */
+        #ceza-yetkili-alan {
+            border-top: 2px dashed #555;
+            padding-top: 20px;
+            margin-top: 20px;
+        }
+        
+        /* Ceza Gönder Butonu */
+        #cezaTutanakGonderBtn {
+            background-color: var(--fail-red);
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1em;
+            text-transform: uppercase;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        #cezaTutanakGonderBtn:hover {
+            background-color: #cc2200;
+        }
+        
+        /* Gizleme Sınıfı */
+        .hidden {
+            display: none !important;
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="fire-effect"></div>
+
+    <div id="login-container">
+        <h2>PERSONEL GİRİŞ</h2>
+        <div class="input-group">
+            <label for="input-name">İsim Soyisim</label>
+            <input type="text" id="input-name" placeholder="Ayşe Demir" required>
+        </div>
+        <div class="input-group">
+            <label for="input-rank">Rütbe Seçiniz</label>
+            <select id="input-rank" required>
+                <option value="İtfaiye Daire Başkanı">İtfaiye Daire Başkanı</option>
+                <option value="İtfaiye Şube Müdürü">İtfaiye Şube Müdürü</option>
+                <option value="İtfaiye Birim Amiri">İtfaiye Birim Amiri</option>
+                <option value="İtfaiye Grup Amiri">İtfaiye Grup Amiri</option>
+                <option value="İtfaiye Kıdemli Başçavuşu">İtfaiye Kıdemli Başçavuşu</option>
+                <option value="İtfaiye Başçavuşu">İtfaiye Başçavuşu</option>
+                <option value="İtfaiye Çavuşu" selected>İtfaiye Çavuşu</option>
+                <option value="Onbaşı İtfaiyeci">Onbaşı İtfaiyeci</option>
+                <option value="İtfaiye Eri">İtfaiye Eri</option>
+                <option value="Stajyer İtfaiyeci">Stajyer İtfaiyeci</option>
+                <option value="AFAD Personeli">AFAD</option>
+                <option value="Orman Hizmetleri">Orman Hizmetleri</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <label for="input-id">Personel ID (Harf ve Rakam)</label>
+            <input type="text" id="input-id" placeholder="ERLC-4210" required>
+        </div>
+        <div class="input-group">
+            <label for="input-password">Şifre (Rastgele Yazılabilir)</label>
+            <input type="password" id="input-password" placeholder="Rastgele Bir Şey Yazın" required>
+        </div>
+        
+        <button class="login-button" onclick="handleLogin()">OPERASYON MERKEZİNE GİRİŞ</button>
+        <p id="error-message">Hata: Lütfen tüm alanları doldurun.</p>
+    </div>
+
+    <div class="full-content-wrapper" id="main-content-wrapper">
+        <header class="header">
+            <h1 class="logo-text">🔥 İSTANBUL İTFAİYE 🔥</h1>
+            <p class="slogan">Can ve Mal Emniyeti İçin 7/24 Görevdeyiz!</p>
+        </header>
+
+        <div class="main-container">
+            
+            <div id="main-menu">
+                <h2>AKTİF GÖREV SAATİ</h2>
+                <div id="rp-clock">00:00:00</div>
+                <nav class="nav-buttons">
+                    <a href="#" class="nav-button" onclick="alert('Rütbeler sayfasına git.')">RÜTBELER VE YAPILANMA</a>
+                    <a href="#" class="nav-button" onclick="alert('Araç Envanteri sayfasına git.')">ARAÇ ENVANTERİ</a>
+                    <a href="#" class="nav-button" onclick="showContent('mesai-content')">GÜNCEL MESAİ TAKİP</a>
+                    <a href="#" class="nav-button" onclick="showContent('olay-tutanak-content')">OLAY TUTANAĞI DÜZENLE 📝</a>
+                    <a href="#" class="nav-button" onclick="showContent('ceza-tutanak-content')">DİSİPLİN/CEZA TUTANAĞI ❌</a> 
+                    <a href="#" class="nav-button" onclick="alert('Prosedürler sayfasına git.')">OPERASYON PROSEDÜRLERİ</a>
+                </nav>
+            </div>
+            
+            <div id="mesai-content">
+                <h2>🚨 Mesai Takip Sistemi 🚨</h2>
+                <div id="timer">00:00:00</div>
+
+                <div class="actions">
+                    <button id="start-btn">Başlat</button>
+                    <button id="stop-btn">Durdur</button>
+                </div>
+
+                <div id="log">
+                    <h3>Mesai Kayıtları</h3>
+                </div>
+                
+                <button class="back-button" onclick="showContent('main-menu')">◀ Geri Dön</button>
+            </div>
+            
+            <div id="olay-tutanak-content">
+                <h2>📝 Yeni Olay Tutanak Kaydı</h2>
+                <div class="form-group">
+                    <label for="olay-id">Olay ID / Çağrı Numarası</label>
+                    <input type="text" id="olay-id" placeholder="Örn: 2025-0125" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="olay-turu">Olay Türü</label>
+                    <select id="olay-turu" required>
+                        <option value="Yangın">Yangın 🚒</option>
+                        <option value="Kurtarma">Kurtarma (Su, Kaza, vs.) 🚑</option>
+                        <option value="Maddi Hasar">Maddi Hasar / Trafik Kazası 💥</option>
+                        <option value="Doğal Afet">Doğal Afet (Sel, Deprem) 🌊</option>
+                        <option value="Diğer">Diğer</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="olay-yeri">Olay Yeri (Adres)</label>
+                    <input type="text" id="olay-yeri" placeholder="Örn: Vespucci Plajı, Ev No: 145" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="katilimcilar">Katılımcı Personel ID'leri (Virgülle Ayırın)</label>
+                    <input type="text" id="katilimcilar" placeholder="Örn: ERLC-4210, ERLC-5580" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="olay-ozeti">Olayın Detaylı Özeti ve Alınan Tedbirler</label>
+                    <textarea id="olay-ozeti" placeholder="Olayın nasıl başladığı, kullanılan araçlar, sonuç ve tespit edilen hasarlar..." required></textarea>
+                </div>
+
+                <button class="nav-button" onclick="submitOlayTutanak()">TUTANAĞI OLUŞTUR ve GÖNDER</button>
+                
+                <div id="olay-tutanak-output">
+                    </div>
+                
+                <button class="back-button" onclick="showContent('main-menu')">◀ Geri Dön</button>
+            </div>
+            
+            <div id="ceza-tutanak-content">
+                <h2>🚨 Personel Ceza/Disiplin Tutanak Formu</h2>
+
+                <div class="alert">
+                    Form, sadece **İtfaiye Daire Başkanı** ve **İtfaiye Şube Müdürü** tarafından doldurulup gönderilebilir. **Yetki için tarayıcı konsoluna `enableFireChiefMode()` yazın.**
+                </div>
+
+                <form id="cezaTutanakFormu">
+                    
+                    <div class="form-group">
+                        <label for="ceza_tutanak_no">Ceza Tutanak No:</label>
+                        <input type="text" id="ceza_tutanak_no" name="ceza_tutanak_no" required placeholder="Örn: CZ-2025-001">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="ceza_tarih">Tarih:</label>
+                        <input type="date" id="ceza_tarih" name="ceza_tarih" required>
+                    </div>
+
+                    <hr style="border-color: #555;">
+
+                    <h3>👨‍💼 Ceza Alan Personel Bilgileri</h3>
+                    
+                    <div class="form-group">
+                        <label for="personel_ad_soyad">Adı Soyadı:</label>
+                        <input type="text" id="personel_ad_soyad" name="personel_ad_soyad" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="personel_rutbe_sicil">Rütbesi/Sicil No:</label>
+                        <input type="text" id="personel_rutbe_sicil" name="personel_rutbe_sicil" required>
+                    </div>
+
+                    <hr style="border-color: #555;">
+
+                    <h3>⚖️ Ceza Detayları</h3>
+
+                    <div class="form-group">
+                        <label for="suc_konusu">Suç/İhlal Konusu:</label>
+                        <input type="text" id="suc_konusu" name="suc_konusu" required placeholder="Örn: Görev İhmali, Disiplinsizlik, Yetki Aşımı">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ceza_tipi">Uygulanan Ceza Tipi:</label>
+                        <select id="ceza_tipi" name="ceza_tipi" required>
+                            <option value="">Seçiniz...</option>
+                            <option value="Uyarı">Uyarı</option>
+                            <option value="Kınama">Kınama</option>
+                            <option value="Ucretsiz İzin">Ücretsiz İzin Kesintisi</option>
+                            <option value="Kademe Durdurma">Maaş/Kademe Durdurma</option>
+                            <option value="Gruptan İhrac">Gruptan İhraç</option>
+                            <option value="Diğer">Diğer</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="olay_aciklama">Olayın Detaylı Açıklaması ve Kanıtlar:</label>
+                        <textarea id="ceza_olay_aciklama" name="olay_aciklama" required></textarea>
+                    </div>
+
+                    <div id="ceza-yetkili-alan">
+                        <label for="tutanak_imza">Tutanak Tutan Yetkili (Daire Bşk. / Şube Md.):</label>
+                        <input type="text" id="tutanak_imza" name="tutanak_imza" required disabled placeholder="Sadece Yetkili Modunda Doldurulabilir">
+
+                        <button type="submit" id="cezaTutanakGonderBtn" class="hidden">
+                            CEZA TUTANAĞINI SİSTEME İŞLE
+                        </button>
+                    </div>
+                </form>
+                
+                <div id="ceza-tutanak-output">
+                    </div>
+                
+                <button class="back-button" onclick="showContent('main-menu')">◀ Geri Dön</button>
+            </div>
+            
+
+
+        </div>
+
+        <footer class="footer">
+            <p>İstanbul RP İtfaiye Birimi &copy; 2025</p>
+        </footer>
+    </div>
+    
+    <div class="profile-toggle" id="profile-toggle-btn" onclick="toggleProfileCard(event)">
+        <span class="profile-toggle-icon">P</span> 
+    </div>
+
+    <div class="profile-card" id="profile-card">
+        <div class="profile-pic-container">
+            <img id="profile-image" src="https://via.placeholder.com/100/cc0000/ffffff?text=AD" alt="Profil Resmi">
+        </div>
+        <h2 id="person-name">İsim Soyisim</h2>
+        <span class="rank" id="person-rank">Rütbe</span>
+        <hr>
+        <p class="info-line">
+            <span class="info-label">Birim:</span>
+            <span id="person-unit">ERLC İtfaiye Merkez İstasyon</span>
+        </p>
+        <p class="info-line">
+            <span class="info-label">ID:</span>
+            <span id="person-id">4210</span>
+        </p>
+        <div class="status-wrapper">
+            <span class="info-label">AKTİF DURUM:</span><br>
+            <span id="status-display" onclick="toggleStatusMenu(event)">Görevde</span>
+        </div>
+        <ul id="status-menu">
+            <li class="status-option" onclick="setStatus('Görevde')">✅ Görevde</li>
+            <li class="status-option" onclick="setStatus('Molada')">☕ Molada</li>
+            <li class="status-option" onclick="setStatus('İnaktif')">⚫ İnaktif</li>
+        </ul>
+    </div>
+
+    <script>
+        
+        let currentProfile = {
+            name: "",
+            rank: "",
+            id: "",
+            unit: "ERLC İtfaiye Merkez İstasyon",
+            status: "Görevde",
+            imageUrl: "https://via.placeholder.com/100/cc0000/ffffff?text=AD" 
+        };
+        
+        // Temel Elementler
+        const mainContentWrapper = document.getElementById('main-content-wrapper');
+        const loginContainer = document.getElementById('login-container');
+        const profileToggleButton = document.getElementById('profile-toggle-btn');
+        const mainMenu = document.getElementById('main-menu');
+        const mesaiContent = document.getElementById('mesai-content');
+        const olayTutanakContent = document.getElementById('olay-tutanak-content');
+        const cezaTutanakContent = document.getElementById('ceza-tutanak-content'); 
+        const errorMessage = document.getElementById('error-message');
+        
+        // Mesai Takip Elementleri
+        const timerDisplay = document.getElementById('timer');
+        const startButton = document.getElementById('start-btn');
+        const stopButton = document.getElementById('stop-btn');
+        const log = document.getElementById('log');
+
+        // Olay Tutanak Elementleri
+        const olayTutanakOutput = document.getElementById('olay-tutanak-output');
+        
+        // Ceza Tutanak Elementleri
+        const cezaTutanakForm = document.getElementById('cezaTutanakFormu'); 
+        const cezaTutanakGonderBtn = document.getElementById('cezaTutanakGonderBtn'); 
+        const cezaTutanakImzaAlani = document.getElementById('tutanak_imza'); 
+        const cezaTutanakOutput = document.getElementById('ceza-tutanak-output'); 
+
+        // Profil Elementleri
+        const cardElement = document.getElementById('profile-card');
+        const statusDisplayElement = document.getElementById('status-display');
+        const statusMenuElement = document.getElementById('status-menu');
+        
+        // Mesai Takip Değişkenleri
+        let startTime = 0; 
+        let elapsedTime = 0; 
+        let timerInterval; 
+        let isRunning = false;
+        
+        // Ceza Yetkilendirme Değişkeni
+        let isAuthorized = false; 
+
+        
+        /* 1. GİRİŞ KONTROLÜ VE VERİ AKTARIMI FONKSİYONU */
+        function handleLogin() {
+            const name = document.getElementById('input-name').value.trim().toUpperCase();
+            const rank = document.getElementById('input-rank').value.trim();
+            const id = document.getElementById('input-id').value.trim(); 
+
+            errorMessage.style.display = 'none';
+
+            if (!name || !rank || !id) {
+                errorMessage.textContent = "Lütfen İsim, Rütbe ve Personel ID alanlarını doldurun.";
+                errorMessage.style.display = 'block';
+                return;
+            }
+
+            currentProfile.name = name;
+            currentProfile.rank = rank.toUpperCase();
+            currentProfile.id = id; 
+            
+            const parts = name.split(' ');
+            let initials = '';
+            if (parts.length > 0) initials += parts[0][0] || '';
+            if (parts.length > 1) initials += parts[1][0] || '';
+            currentProfile.imageUrl = `https://via.placeholder.com/100/cc0000/ffffff?text=${initials.toUpperCase()}`;
+
+            updateProfileDisplay();
+
+            loginContainer.style.display = 'none';
+            mainContentWrapper.style.display = 'flex';
+            profileToggleButton.style.display = 'flex'; 
+            
+            // HATA GİDERME: Giriş yaptıktan sonra main-menu'yü görünür yap.
+            mainMenu.style.display = 'block';
+            document.querySelector('.main-container h2').textContent = "AKTİF GÖREV SAATİ";
+            
+        }
+        
+        /* 2. ANA İÇERİK GEZİNME FONKSİYONU */
+        function showContent(contentId) {
+            // Tüm içerikleri gizle
+            mainMenu.style.display = 'none';
+            mesaiContent.style.display = 'none';
+            olayTutanakContent.style.display = 'none';
+            cezaTutanakContent.style.display = 'none'; 
+            
+            // İstenen içeriği göster
+            document.getElementById(contentId).style.display = 'block';
+
+            if(contentId === 'main-menu') {
+                document.querySelector('.main-container h2').textContent = "AKTİF GÖREV SAATİ";
+            } else {
+                // Alt sayfalarda büyük başlığı temizle veya sayfaya özel ayarla
+                const h2Element = document.querySelector('.main-container h2');
+                const contentTitle = document.querySelector(`#${contentId} h2`);
+                h2Element.textContent = contentTitle ? contentTitle.textContent : ""; 
+            }
+        }
+        
+        /* 3. MESAİ TAKİP SİSTEMİ FONKSİYONLARI */
+        
+        function formatTime(ms) {
+            const totalSeconds = Math.floor(ms / 1000);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            const pad = (num) => num.toString().padStart(2, '0');
+            return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+        }
+
+        function updateMesaiTimer() {
+            elapsedTime = Date.now() - startTime;
+            timerDisplay.textContent = formatTime(elapsedTime);
+        }
+
+        startButton.onclick = function() {
+            if (isRunning) return; 
+            isRunning = true;
+            startTime = Date.now() - elapsedTime; 
+            timerInterval = setInterval(updateMesaiTimer, 1000);
+            startButton.disabled = true;
+            stopButton.classList.add('active'); 
+            addLog(`🟢 Mesai Başladı (${currentProfile.name}): <b>${new Date().toLocaleTimeString('tr-TR')}</b>`);
+        };
+
+        stopButton.onclick = function() {
+            if (!isRunning) return;
+            isRunning = false;
+            clearInterval(timerInterval); 
+            const duration = formatTime(elapsedTime);
+            addLog(`🔴 Mesai Bitti (${currentProfile.name}): <b>${new Date().toLocaleTimeString('tr-TR')}</b> (Süre: <b>${duration}</b>)`);
+            elapsedTime = 0;
+            timerDisplay.textContent = "00:00:00";
+            startButton.disabled = false;
+            stopButton.classList.remove('active'); 
+        };
+
+        function addLog(message) { 
+            const entry = document.createElement('p');
+            entry.innerHTML = message;
+            log.prepend(entry); 
+        }
+        
+        /* 4. OLAY TUTANAK KAYIT SİSTEMİ FONKSİYONU */
+        function submitOlayTutanak() {
+            const olayId = document.getElementById('olay-id').value.trim();
+            const olayTuru = document.getElementById('olay-turu').value;
+            const olayYeri = document.getElementById('olay-yeri').value.trim();
+            const katilimcilar = document.getElementById('katilimcilar').value.trim();
+            const olayOzeti = document.getElementById('olay-ozeti').value.trim();
+
+            if (!olayId || !olayYeri || !katilimcilar || !olayOzeti) {
+                olayTutanakOutput.style.display = 'block';
+                olayTutanakOutput.innerHTML = "<h3>HATA!</h3><p>Lütfen tüm zorunlu tutanak alanlarını doldurun.</p>";
+                olayTutanakOutput.style.borderColor = 'var(--fail-red)'; // CSS değişkeni kullanımı
+                return;
+            }
+            
+            const now = new Date();
+            const tutanakTarih = now.toLocaleDateString('tr-TR');
+            const tutanakSaat = now.toLocaleTimeString('tr-TR');
+
+            const outputHTML = `
+                <h3>Oluşturulan Tutanak Özeti</h3>
+                <p><strong>Raporu Düzenleyen:</strong> ${currentProfile.name} (${currentProfile.rank})</p>
+                <p><strong>Tarih/Saat:</strong> ${tutanakTarih} / ${tutanakSaat}</p>
+                <p><strong>Çağrı Numarası:</strong> <strong>${olayId}</strong></p>
+                <hr style="border-top: 1px dashed #555;">
+                <p><strong>Olay Türü:</strong> ${olayTuru}</p>
+                <p><strong>Olay Yeri:</strong> ${olayYeri}</p>
+                <p><strong>Katılımcılar:</strong> ${katilimcilar}</p>
+                <hr style="border-top: 1px dashed #555;">
+                <p><strong>Özet:</strong> ${olayOzeti}</p>
+            `;
+
+            olayTutanakOutput.style.display = 'block';
+            olayTutanakOutput.style.borderColor = 'var(--success-green)'; // CSS değişkeni kullanımı
+            olayTutanakOutput.innerHTML = outputHTML;
+            
+            // Formu temizle
+            document.getElementById('olay-id').value = '';
+            document.getElementById('olay-yeri').value = '';
+            document.getElementById('katilimcilar').value = '';
+            document.getElementById('olay-ozeti').value = '';
+        }
+        
+        /* 5. CEZA TUTANAK SİSTEMİ FONKSİYONLARI */
+
+        // RP için yetkiyi açma komutu (Console'a yazılacak)
+        window.enableFireChiefMode = function() {
+            isAuthorized = true;
+            cezaTutanakGonderBtn.classList.remove('hidden');
+            cezaTutanakImzaAlani.disabled = false;
+            cezaTutanakImzaAlani.placeholder = "Yetkili İsim/Sicil";
+
+            console.log("%c[YETKİ AÇIK] Ceza Tutanak Gönderme Yetkisi Aktif. Sadece İtfaiye Daire Başkanı ve Şube Müdürü kullanmalıdır.", "color: red; font-weight: bold;");
+        }
+        
+        // Form gönderimi
+        cezaTutanakForm.addEventListener('submit', function(e) {
+            e.preventDefault(); 
+            
+            if (!isAuthorized) {
+                alert("Yalnızca İtfaiye Daire Başkanı/Şube Müdürü ceza tutanağı gönderebilir. Yetki için konsola 'enableFireChiefMode()' yazın.");
+                return;
+            }
+            
+            const data = {
+                ceza_tutanak_no: document.getElementById('ceza_tutanak_no').value,
+                ceza_tarih: document.getElementById('ceza_tarih').value,
+                personel_ad_soyad: document.getElementById('personel_ad_soyad').value,
+                personel_rutbe_sicil: document.getElementById('personel_rutbe_sicil').value,
+                suc_konusu: document.getElementById('suc_konusu').value,
+                ceza_tipi: document.getElementById('ceza_tipi').value,
+                olay_aciklama: document.getElementById('ceza_olay_aciklama').value,
+                tutanak_imza: document.getElementById('tutanak_imza').value
+            };
+
+            const cezaColor = data.ceza_tipi === 'Gruptan İhrac' ? 'var(--fail-red)' : 'var(--accent-yellow)';
+
+            const outputHTML = `
+                <h3>CEZA TUTANAĞI ÖZETİ - ${data.ceza_tutanak_no}</h3>
+                <p><strong>Tarih:</strong> ${data.ceza_tarih}</p>
+                <hr style="border-top: 1px dashed #555;">
+                <p><strong>Ceza Alan:</strong> <strong>${data.personel_ad_soyad}</strong> (${data.personel_rutbe_sicil})</p>
+                <p><strong>İhlal:</strong> ${data.suc_konusu}</p>
+                <p><strong>Uygulanan Ceza:</strong> <strong style="color: ${cezaColor}">${data.ceza_tipi}</strong></p>
+                <hr style="border-top: 1px dashed #555;">
+                <p><strong>Açıklama:</strong> ${data.olay_aciklama}</p>
+                <p><strong>Tutanak Tutan:</strong> ${data.tutanak_imza}</p>
+            `;
+
+            cezaTutanakOutput.style.display = 'block';
+            cezaTutanakOutput.style.borderColor = 'var(--fail-red)';
+            cezaTutanakOutput.innerHTML = outputHTML;
+
+            alert(`Ceza tutanağı (${data.personel_ad_soyad} için) başarıyla sisteme kaydedildi! (RP Simülasyonu)`);
+            cezaTutanakForm.reset(); // Formu sıfırla
+
+            // Yetkiyi sıfırla
+            isAuthorized = false; 
+            cezaTutanakGonderBtn.classList.add('hidden');
+            cezaTutanakImzaAlani.disabled = true;
+            cezaTutanakImzaAlani.placeholder = "Sadece Yetkili Modunda Doldurulabilir";
+            console.log("[YETKİ KAPALI] Yetki kullanıldı, sıfırlandı.");
+        });
+
+        /* 6. RP SAATİ VE DİĞER FONKSİYONLAR */
+
+        function updateClock() { 
+            const now = new Date();
+            let hours = now.getHours();
+            let minutes = now.getMinutes();
+            let seconds = now.getSeconds();
+            hours = hours < 10 ? '0' + hours : hours;
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+            seconds = seconds < 10 ? '0' + seconds : seconds;
+            document.getElementById('rp-clock').textContent = hours + ':' + minutes + ':' + seconds;
+        }
+        setInterval(updateClock, 1000);
+        
+        function updateProfileDisplay() { 
+            document.getElementById('profile-image').src = currentProfile.imageUrl;
+            document.getElementById('person-name').textContent = currentProfile.name;
+            document.getElementById('person-rank').textContent = currentProfile.rank;
+            document.getElementById('person-id').textContent = currentProfile.id;
+            document.getElementById('person-unit').textContent = currentProfile.unit;
+            statusDisplayElement.textContent = currentProfile.status;
+            statusDisplayElement.classList.remove('status-Görevde', 'status-Molada', 'status-İnaktif');
+            statusDisplayElement.classList.add('status-' + currentProfile.status);
+        }
+        
+        function toggleProfileCard(event) { 
+             if(event) event.stopPropagation(); 
+             cardElement.classList.toggle('visible');
+             if (!cardElement.classList.contains('visible')) {
+                statusMenuElement.classList.remove('visible');
+             }
+        }
+
+        function toggleStatusMenu(event) { 
+            event.stopPropagation(); 
+            statusMenuElement.classList.toggle('visible');
+        }
+
+        function setStatus(newStatus) { 
+            currentProfile.status = newStatus;
+            updateProfileDisplay();
+            statusMenuElement.classList.remove('visible'); 
+        }
+        
+        // Sayfa Yüklendiğinde İlk Ayarlar
+        document.addEventListener('DOMContentLoaded', () => {
+            mainContentWrapper.style.display = 'none';
+            profileToggleButton.style.display = 'none';
+            updateClock();
+            
+            document.addEventListener('click', (event) => { 
+                const isCardVisible = cardElement.classList.contains('visible');
+                const isToggleClicked = event.target.closest('.profile-toggle');
+
+                if (isCardVisible && !cardElement.contains(event.target) && !isToggleClicked) {
+                    cardElement.classList.remove('visible');
+                }
+                
+                if (statusMenuElement.classList.contains('visible') && event.target !== statusDisplayElement && !statusMenuElement.contains(event.target)) {
+                     statusMenuElement.classList.remove('visible');
+                }
+            });
+            
+            // Başlangıçta ana menüyü gizli tut (Giriş yapıldığında JS açacak)
+            mainMenu.style.display = 'none'; 
+            
+            // Başlangıçta Ceza Butonunu Gizle
+            if (!isAuthorized) {
+                cezaTutanakGonderBtn.classList.add('hidden');
+                cezaTutanakImzaAlani.disabled = true;
+                console.log("[YETKİ KAPALI] Ceza tutanak gönderme butonu gizli. Yetkilendirme için 'enableFireChiefMode()' komutunu çalıştırın.");
+            }
+        });
+    </script>
+</body>
+</html>
